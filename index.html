@@ -227,7 +227,10 @@
         .nav-item i { width: 20px; height: 20px; margin-bottom: 4px; }
         .nav-item span { font-size: 9px; font-weight: 700; }
 
-        .page-section { display: none; }
+        .page-section { 
+            display: none; 
+            margin-top: 0;
+        }
         .page-section.active { 
             display: block; 
             animation: nativeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -241,47 +244,52 @@
         .badge-warn { color: var(--danger); font-weight: 700; }
         .editable { cursor: pointer; }
 
-        /* --- OPTIMASI TABLET & PC (PERBAIKAN) --- */
+        /* ===== OPTIMASI TABLET & PC (DIPERBAIKI) ===== */
         @media (min-width: 768px) {
             :root {
                 --safe-area: 40px;
             }
 
             body {
-                padding-bottom: 0;
-                padding-left: 280px; 
-                display: flex;
-                justify-content: center;
+                padding: 0;
+                padding-left: 280px;
+                display: block;
+                min-height: 100vh;
+                background-attachment: fixed;
             }
 
             .container {
-                max-width: 1000px;
+                max-width: none;
+                width: auto;
+                padding: 140px 40px 40px 40px;
                 margin: 0;
-                width: 100%;
-                padding-top: 40px;
             }
 
             header {
-                padding: 40px var(--safe-area) 20px;
                 position: fixed;
                 top: 0;
                 left: 280px;
                 right: 0;
+                padding: 40px 40px 20px 40px;
                 background: var(--bg-dark);
-                z-index: 800;
                 backdrop-filter: blur(20px);
                 border-bottom: 1px solid var(--border);
+                z-index: 800;
+                margin: 0;
             }
 
             .bottom-nav-container {
+                position: fixed;
                 top: 0;
-                bottom: 0;
                 left: 0;
+                bottom: 0;
                 width: 280px;
                 padding: 24px;
                 background: var(--card-bg);
                 border-right: 1px solid var(--border);
                 pointer-events: auto;
+                display: flex;
+                flex-direction: column;
             }
 
             .bottom-nav {
@@ -293,6 +301,7 @@
                 backdrop-filter: none;
                 justify-content: flex-start;
                 padding-top: 100px;
+                flex: 1;
             }
 
             .nav-item {
@@ -303,10 +312,13 @@
                 border-radius: 16px;
                 gap: 15px;
                 transition: all 0.2s;
+                justify-content: flex-start;
+                opacity: 0.5;
             }
 
             .nav-item.active {
                 background: rgba(0, 122, 255, 0.1);
+                opacity: 1;
             }
 
             .nav-item i {
@@ -317,33 +329,150 @@
 
             .nav-item span {
                 font-size: 14px;
+                font-weight: 600;
             }
 
-            /* Mencegah halaman tertumpuk */
-            .page-section {
-                display: none;
-                margin-top: 140px; 
+            /* ===== PERBAIKAN HALAMAN INPUT ===== */
+            #inputPage.active {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 24px;
             }
 
-            .page-section.active {
-                display: block;
+            #inputPage .form-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
 
+            #inputPage .input-wrapper:first-child {
+                grid-column: span 4;
+            }
+
+            /* ===== PERBAIKAN HALAMAN GRAFIK ===== */
             #chartPage.active {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 24px;
             }
 
-            #chartPage .card:first-child, 
-            #chartPage > button.btn-main { 
+            #chartPage .card:first-child {
                 grid-column: span 2;
+            }
+
+            #chartPage > button.btn-main {
+                grid-column: span 2;
+                margin-top: 0;
+            }
+
+            /* ===== PERBAIKAN HALAMAN RIWAYAT ===== */
+            #historyPage.active {
+                display: block;
+            }
+
+            #historyPage .card {
+                min-width: 600px;
+            }
+
+            #historyPage table {
+                min-width: 100%;
+            }
+
+            /* ===== PERBAIKAN HALAMAN PENGATURAN ===== */
+            #settingsPage.active {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+
+            #settingsPage .card:last-child {
+                grid-column: span 2;
+                text-align: center;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                margin-bottom: 0;
             }
         }
 
+        /* ===== DESKTOP BESAR (≥1200px) ===== */
         @media (min-width: 1200px) {
             .container {
                 max-width: 1200px;
+                margin: 0 auto;
+                padding: 140px 20px 40px 20px;
+            }
+
+            /* HALAMAN GRAFIK: 3 KOLOM */
+            #chartPage.active {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            #chartPage .card:first-child {
+                grid-column: span 3;
+            }
+
+            #chartPage > button.btn-main {
+                grid-column: span 3;
+            }
+
+            /* HALAMAN PENGATURAN: 3 KOLOM */
+            #settingsPage.active {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            #settingsPage .card:last-child {
+                grid-column: span 3;
+            }
+
+            /* HALAMAN INPUT: FORM LEBIH LEBAR */
+            #inputPage.active {
+                grid-template-columns: 1fr;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+
+        /* ===== PERBAIKAN UMUM UNTUK PC ===== */
+        @media (hover: hover) {
+            .btn-main:hover {
+                opacity: 0.9;
+                transform: translateY(-2px);
+                transition: all 0.2s ease;
+            }
+
+            .nav-item:hover {
+                background: rgba(120, 120, 128, 0.1);
+                opacity: 0.8;
+            }
+
+            .editable:hover {
+                text-decoration: underline;
+            }
+
+            button:hover {
+                transform: translateY(-1px);
+            }
+        }
+
+        /* ===== FIX UNTUK SEMUA HALAMAN TIDAK TERCAMPUR ===== */
+        @media (min-width: 768px) {
+            .page-section {
+                display: none !important;
+                margin-top: 0 !important;
+            }
+            
+            .page-section.active {
+                display: block !important;
+            }
+            
+            #inputPage.active,
+            #chartPage.active,
+            #historyPage.active,
+            #settingsPage.active {
+                display: grid !important;
+            }
+            
+            #historyPage.active {
+                display: block !important;
             }
         }
     </style>
