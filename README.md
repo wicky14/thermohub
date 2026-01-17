@@ -4,13 +4,19 @@
 
 ---
 
-## 📸 Screenshots
+## 📸 Preview Aplikasi
 
-| Halaman Input | Visualisasi Grafik | Riwayat Data | Mode Terang |
-| :---: | :---: | :---: | :---: |
-| ![Input Page](https://via.placeholder.com/200x400?text=Input+Aktivitas) | ![Chart Page](https://via.placeholder.com/200x400?text=Visualisasi+Grafik) | ![History Page](https://via.placeholder.com/200x400?text=Riwayat+Log) | ![Light Mode](https://via.placeholder.com/200x400?text=Light+Mode) |
+Berikut adalah tampilan antarmuka ThermoHub yang dioptimalkan untuk perangkat seluler:
 
-> **Catatan:** Ganti link gambar di atas dengan file screenshot asli yang Anda simpan di repositori Anda.
+| 1. Input Data | 2. Grafik Tren | 3. Riwayat Log |
+| :---: | :---: | :---: |
+| ![Halaman Input](./screenshots/input.png) | ![Visualisasi Grafik](./screenshots/grafik.png) | ![Tabel Riwayat](./screenshots/riwayat.png) |
+| Antarmuka input intuitif dengan validasi data suhu dan kelembapan. | Visualisasi interaktif menggunakan Chart.js lengkap dengan garis ambang batas. | Log data historis dengan indikator peringatan warna merah jika melebihi batas. |
+
+| 4. Mode Terang | 5. Setelan & Ambang Batas | 6. Ekspor Data |
+| :---: | :---: | :---: |
+| ![Mode Terang](./screenshots/light_mode.png) | ![Setelan](./screenshots/settings.png) | ![Ekspor Excel](./screenshots/export.png) |
+| Dukungan tema terang untuk penggunaan di bawah sinar matahari. | Konfigurasi batas suhu/kelembapan dan manajemen database (Impor/Ekspor JSON). | Fitur ekspor laporan ke format Excel (.xlsx) dan gambar (.png). |
 
 ---
 
