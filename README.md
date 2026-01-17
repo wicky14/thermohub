@@ -4,6 +4,12 @@
 
 ---
 
+## 🚀 Live Demo
+Akses aplikasi secara langsung melalui tautan di bawah ini:
+**[BUKA THERMOHUB KLIK DI SINI](https://wicky14.github.io/thermohub/)**
+
+---
+
 ## 📸 Preview Aplikasi
 
 Berikut adalah tampilan antarmuka ThermoHub yang dioptimalkan untuk perangkat seluler:
