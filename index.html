@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ThermoHub</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #ffffff;
+            --accent: #007AFF;
+            --danger: #ff3b30;
+            --bg-dark: #000000;
+            --card-bg: rgba(28, 28, 30, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --safe-area: 24px;
+            --text-main: #ffffff;
+            --gradient-bg: radial-gradient(circle at 50% -10%, #1c1c1e, #000000);
+        }
+
+        /* --- LIGHT MODE OVERRIDES --- */
+        body.light-mode {
+            --primary: #000000;
+            --bg-dark: #F2F2F7;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --border: rgba(0, 0, 0, 0.1);
+            --text-main: #000000;
+            --gradient-bg: radial-gradient(circle at 50% -10%, #ffffff, #F2F2F7);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            background-image: var(--gradient-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 120px; 
+            overflow-x: hidden;
+            touch-action: pan-y;
+            transition: background 0.3s ease;
+        }
+
+        header {
+            padding: 60px var(--safe-area) 30px var(--safe-area);
+        }
+
+        header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.5;
+            margin: 8px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .container {
+            padding: 0 var(--safe-area);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.9;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 11px;
+            opacity: 0.5;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .input-field {
+            background: rgba(120, 120, 128, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            color: var(--text-main);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+            background: rgba(120, 120, 128, 0.15);
+        }
+
+        button.btn-main {
+            background: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 18px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.1s;
+        }
+
+        button.btn-main:active { transform: scale(0.97); }
+
+        .btn-outline {
+            background: transparent !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border) !important;
+            font-size: 12px !important;
+            padding: 12px !important;
+        }
+
+        .btn-danger-outline {
+            background: transparent !important;
+            color: var(--danger) !important;
+            border: 1px solid rgba(255, 59, 48, 0.3) !important;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 24px;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 24px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-content h2 { margin: 0 0 10px 0; font-size: 18px; }
+        .modal-content p { font-size: 14px; opacity: 0.6; margin-bottom: 20px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 11px; opacity: 0.4; padding-bottom: 15px; color: var(--text-main); }
+        td { padding: 18px 0; border-top: 1px solid var(--border); font-size: 15px; }
+
+        .bottom-nav-container {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            padding: 20px var(--safe-area) calc(20px + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, var(--bg-dark), transparent);
+            pointer-events: none;
+            z-index: 900;
+        }
+        .bottom-nav {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            height: 70px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-main); opacity: 0.3; text-decoration: none; padding: 5px 15px;
+            flex: 1;
+        }
+        .nav-item.active { color: var(--accent); opacity: 1; }
+        .nav-item i { width: 20px; height: 20px; margin-bottom: 4px; }
+        .nav-item span { font-size: 9px; font-weight: 700; }
+
+        .page-section { display: none; }
+        .page-section.active { 
+            display: block; 
+            animation: nativeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes nativeSlideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .badge-warn { color: var(--danger); font-weight: 700; }
+        .editable { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalTitle">Info</h2>
+            <p id="modalMsg">Pesan...</p>
+            <div id="modalInputArea"></div>
+            <div id="modalActions" style="display:flex; gap:10px; margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <header>
+        <p id="headerDate"></p>
+        <h1 id="pageTitle">Aktivitas</h1>
+    </header>
+
+    <div class="container">
+        <section id="inputPage" class="page-section active">
+            <div class="card">
+                <span class="card-title"><i data-lucide="plus-circle"></i> TAMBAH DATA</span>
+                <div class="form-grid">
+                    <div class="input-wrapper" style="grid-column: span 2;">
+                        <label>TANGGAL</label>
+                        <input type="date" id="dataDate" class="input-field">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>SUHU (°C)</label>
+                        <input type="number" id="tempInput" placeholder="00.0" class="input-field">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>LEMBAP (%)</label>
+                        <input type="number" id="humInput" placeholder="00" class="input-field">
+                    </div>
+                </div>
+                <button class="btn-main" onclick="addData()">
+                    <i data-lucide="save" style="width:18px"></i> SIMPAN
+                </button>
+            </div>
+        </section>
+
+        <section id="chartPage" class="page-section">
+            <div class="card" style="padding: 18px; margin-bottom: 16px;">
+                <span class="card-title"><i data-lucide="filter"></i> FILTER RENTANG TANGGAL</span>
+                <div class="form-grid">
+                    <div class="input-wrapper">
+                        <label>DARI</label>
+                        <input type="date" id="filterStart" class="input-field" onchange="renderChart()" style="padding: 12px; font-size: 14px;">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>SAMPAI</label>
+                        <input type="date" id="filterEnd" class="input-field" onchange="renderChart()" style="padding: 12px; font-size: 14px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <span class="card-title"><i data-lucide="thermometer"></i> GRAFIK SUHU (°C)</span>
+                <div style="height: 220px; margin-bottom: 15px;">
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="form-grid">
+                    <button class="btn-main btn-outline" onclick="downloadFullCard('tempChart', 'GRAFIK SUHU (°C)')">
+                        <i data-lucide="image"></i> GAMBAR 
+                    </button>
+                    <button class="btn-main btn-outline" onclick="downloadExcel('temp')">
+                        <i data-lucide="file-text"></i> EXCEL 
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <span class="card-title"><i data-lucide="droplets"></i> GRAFIK KELEMBAPAN (%)</span>
+                <div style="height: 220px; margin-bottom: 15px;">
+                    <canvas id="humChart"></canvas>
+                </div>
+                <div class="form-grid">
+                    <button class="btn-main btn-outline" onclick="downloadFullCard('humChart', 'GRAFIK KELEMBAPAN (%)')">
+                        <i data-lucide="image"></i> GAMBAR
+                    </button>
+                    <button class="btn-main btn-outline" onclick="downloadExcel('hum')">
+                        <i data-lucide="file-text"></i> EXCEL 
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-main" onclick="downloadExcelCombined()">
+                <i data-lucide="file-spreadsheet" style="width:18px"></i> EXCEL GABUNGAN
+            </button>
+        </section>
+
+        <section id="historyPage" class="page-section">
+            <div class="card">
+                <span class="card-title"><i data-lucide="layers"></i> RIWAYAT LOG</span>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TGL</th>
+                            <th>SUHU</th>
+                            <th>HUM</th>
+                            <th style="text-align:right">AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+                <button id="btnLoadMore" class="btn-main btn-outline" onclick="loadMore()" style="display: none; margin-top: 20px;">
+                    Tampilkan Lebih Banyak
+                </button>
+            </div>
+        </section>
+
+        <section id="settingsPage" class="page-section">
+            <div class="card">
+                <span class="card-title"><i data-lucide="palette"></i> TEMA APLIKASI</span>
+                <button class="btn-main btn-outline" onclick="toggleTheme()" id="themeBtn">
+                    <i data-lucide="sun"></i> AKTIFKAN MODE TERANG
+                </button>
+            </div>
+
+            <div class="card">
+                <span class="card-title"><i data-lucide="bell"></i> AMBANG BATAS</span>
+                <div class="form-grid">
+                    <div class="input-wrapper">
+                        <label>SUHU MAKS</label>
+                        <input type="number" id="maxTemp" placeholder="Max °C" class="input-field">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>SUHU MIN</label>
+                        <input type="number" id="minTemp" placeholder="Min °C" class="input-field">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>HUM MAKS</label>
+                        <input type="number" id="maxHum" placeholder="Max %" class="input-field">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>HUM MIN</label>
+                        <input type="number" id="minHum" placeholder="Min %" class="input-field">
+                    </div>
+                </div>
+                <button class="btn-main" onclick="saveThreshold()" style="background: var(--accent); color: white;">
+                    <i data-lucide="check-circle" style="width:18px"></i> SIMPAN
+                </button>
+            </div>
+
+            <div class="card">
+                <span class="card-title"><i data-lucide="database"></i> CADANGAN DATA</span>
+                <div class="form-grid">
+                    <button class="btn-main btn-outline" onclick="exportDatabase()">
+                        <i data-lucide="download"></i> EKSPOR
+                    </button>
+                    <button class="btn-main btn-outline" onclick="document.getElementById('importFile').click()">
+                        <i data-lucide="upload"></i> IMPOR
+                    </button>
+                    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importDatabase(event)">
+                </div>
+            </div>
+
+            <div class="card" style="border-color: rgba(255,59,48,0.2)">
+                <span class="card-title" style="color: var(--danger)"><i data-lucide="alert-triangle"></i> DANGER ZONE</span>
+                <button class="btn-main btn-danger-outline" onclick="confirmReset()">
+                    <i data-lucide="refresh-ccw" style="width:16px"></i> RESET DATA
+                </button>
+            </div>
+            <div class="card" style="text-align: center; background: transparent; border: none; box-shadow: none;">
+                <div style="opacity: 0.4; font-size: 12px;">
+                    <i data-lucide="info" style="width: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                    TENTANG APLIKASI
+                </div>
+                <p style="font-size: 14px; font-weight: 600; margin: 10px 0 5px 0;">ThermoHub</p>
+                <p style="font-size: 12px; opacity: 0.6; margin: 0;">Dibuat oleh <strong>IT AGV</strong></p>
+            </div>
+        </section>
+    </div>
+
+    <div class="bottom-nav-container">
+        <nav class="bottom-nav">
+            <a href="javascript:void(0)" class="nav-item active" data-page="inputPage" onclick="switchPage('inputPage', this, 'Aktivitas')">
+                <i data-lucide="plus-square"></i><span>Input</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" data-page="chartPage" onclick="switchPage('chartPage', this, 'Visualisasi')">
+                <i data-lucide="pie-chart"></i><span>Grafik</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" data-page="historyPage" onclick="switchPage('historyPage', this, 'Riwayat')">
+                <i data-lucide="clock"></i><span>Riwayat</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" data-page="settingsPage" onclick="switchPage('settingsPage', this, 'Pengaturan')">
+                <i data-lucide="settings"></i><span>Setelan</span>
+            </a>
+        </nav>
+    </div>
+    
+
+    <script>
+        lucide.createIcons();
+        let db = JSON.parse(localStorage.getItem('thermoDataV5')) || [];
+        let tempChart, humChart;
+        let historyLimit = 30;
+
+        // --- LOGIKA TEMA ---
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            updateThemeUI();
+            if (document.getElementById('chartPage').classList.contains('active')) renderChart();
+        }
+
+        function updateThemeUI() {
+            const isLight = document.body.classList.contains('light-mode');
+            const btn = document.getElementById('themeBtn');
+            btn.innerHTML = isLight ? '<i data-lucide="moon"></i> AKTIFKAN MODE GELAP' : '<i data-lucide="sun"></i> AKTIFKAN MODE TERANG';
+            lucide.createIcons();
+        }
+
+        // Apply theme on load
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            updateThemeUI();
+        }
+
+        // --- LOGIKA SWIPE GESTURE ---
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        const pages = ['inputPage', 'chartPage', 'historyPage', 'settingsPage'];
+        const pageTitles = ['Aktivitas', 'Visualisasi', 'Riwayat', 'Pengaturan'];
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, {passive: true});
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            const minSwipeDist = 70;
+            const maxVerticalDist = 100;
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = Math.abs(touchEndY - touchStartY);
+
+            if (Math.abs(deltaX) > minSwipeDist && deltaY < maxVerticalDist) {
+                const activeSection = document.querySelector('.page-section.active');
+                const currentIndex = pages.indexOf(activeSection.id);
+
+                if (deltaX < 0 && currentIndex < pages.length - 1) {
+                    navigateToIndex(currentIndex + 1);
+                } else if (deltaX > 0 && currentIndex > 0) {
+                    navigateToIndex(currentIndex - 1);
+                }
+            }
+        }
+
+        function navigateToIndex(index) {
+            const pageId = pages[index];
+            const title = pageTitles[index];
+            const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+            if (window.navigator.vibrate) window.navigator.vibrate(5);
+            switchPage(pageId, navItem, title);
+        }
+
+        function showModal(title, msg, type = 'info', onConfirm = null, showInput = false, defaultValue = '') {
+            const overlay = document.getElementById('modalOverlay');
+            const actions = document.getElementById('modalActions');
+            const inputArea = document.getElementById('modalInputArea');
+            
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+            inputArea.innerHTML = showInput ? `<input type="number" id="modalInput" class="input-field" value="${defaultValue}" style="margin-bottom:15px">` : '';
+            actions.innerHTML = '';
+
+            const btnOk = document.createElement('button');
+            btnOk.className = 'btn-main';
+            btnOk.innerText = type === 'confirm' ? 'Ya, Lanjut' : 'OK';
+            btnOk.onclick = () => {
+                const val = showInput ? document.getElementById('modalInput').value : true;
+                overlay.style.display = 'none';
+                if(onConfirm) onConfirm(val);
+            };
+
+            if(type === 'confirm' || showInput) {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn-main btn-outline';
+                btnCancel.innerText = 'Batal';
+                btnCancel.onclick = () => overlay.style.display = 'none';
+                actions.appendChild(btnCancel);
+            }
+
+            actions.appendChild(btnOk);
+            overlay.style.display = 'flex';
+        }
+
+        document.getElementById('dataDate').valueAsDate = new Date();
+        document.getElementById('headerDate').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+        
+        function switchPage(pageId, el, title) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.getElementById('pageTitle').innerText = title;
+            if(el) el.classList.add('active');
+            if(pageId === 'chartPage') setTimeout(renderChart, 100);
+            window.scrollTo(0,0);
+        }
+
+        function addData() {
+            const date = document.getElementById('dataDate').value;
+            const temp = parseFloat(document.getElementById('tempInput').value);
+            const hum = parseFloat(document.getElementById('humInput').value);
+            if (!date || isNaN(temp)) return showModal("Error", "Data suhu wajib diisi");
+            
+            db.push({ id: Date.now(), date, temp, hum });
+            db.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveDB(); renderAll();
+            showModal("Berhasil", "Record data telah disimpan");
+            document.getElementById('tempInput').value = '';
+            document.getElementById('humInput').value = '';
+        }
+
+        function saveThreshold() {
+            const thresholds = {
+                maxT: document.getElementById('maxTemp').value,
+                minT: document.getElementById('minTemp').value,
+                maxH: document.getElementById('maxHum').value,
+                minH: document.getElementById('minHum').value
+            };
+            localStorage.setItem('thermoThresholds', JSON.stringify(thresholds));
+            renderAll();
+            showModal("Tersimpan", "Pengaturan ambang batas diperbarui");
+        }
+
+        function loadThreshold() {
+            const saved = JSON.parse(localStorage.getItem('thermoThresholds'));
+            if (saved) {
+                document.getElementById('maxTemp').value = saved.maxT || '';
+                document.getElementById('minTemp').value = saved.minT || '';
+                document.getElementById('maxHum').value = saved.maxH || '';
+                document.getElementById('minHum').value = saved.minH || '';
+            }
+        }
+
+        function editItem(id, field) {
+            const index = db.findIndex(item => item.id === id);
+            showModal(`Ubah ${field}`, `Masukkan nilai baru untuk ${field}:`, 'prompt', (val) => {
+                if(val !== '' && !isNaN(val)) {
+                    db[index][field] = parseFloat(val);
+                    saveDB(); renderAll();
+                }
+            }, true, db[index][field]);
+        }
+
+        function confirmDelete(id) {
+            showModal("Hapus Data", "Apakah Anda yakin ingin menghapus baris ini?", 'confirm', () => {
+                db = db.filter(item => item.id !== id);
+                saveDB(); renderAll();
+            });
+        }
+
+        function confirmReset() {
+            showModal("Reset Total", "Seluruh database akan dihapus permanen. Lanjutkan?", 'confirm', () => {
+                db = []; saveDB(); renderAll();
+            });
+        }
+
+        function saveDB() { localStorage.setItem('thermoDataV5', JSON.stringify(db)); }
+
+        function loadMore() {
+            historyLimit += 30;
+            renderAll();
+        }
+
+        function renderAll() {
+            const body = document.getElementById('tableBody');
+            const thresholds = JSON.parse(localStorage.getItem('thermoThresholds')) || {};
+            const maxT = parseFloat(thresholds.maxT) || 999;
+            const minT = parseFloat(thresholds.minT) || -999;
+            const maxH = parseFloat(thresholds.maxH) || 999;
+            const minH = parseFloat(thresholds.minH) || -999;
+
+            body.innerHTML = '';
+            const reversedDb = db.slice().reverse();
+            const displayData = reversedDb.slice(0, historyLimit);
+
+            displayData.forEach((item) => {
+                const isWarnT = item.temp > maxT || item.temp < minT;
+                const isWarnH = item.hum > maxH || item.hum < minH;
+                body.innerHTML += `
+                    <tr>
+                        <td>${new Date(item.date).toLocaleDateString('id-ID', {day:'2-digit', month:'short'})}</td>
+                        <td class="${isWarnT ? 'badge-warn' : ''} editable" onclick="editItem(${item.id}, 'temp')">${item.temp}°C</td>
+                        <td class="${isWarnH ? 'badge-warn' : ''} editable" onclick="editItem(${item.id}, 'hum')">${item.hum}%</td>
+                        <td style="text-align:right">
+                            <button style="background:none; border:none; color:var(--danger); opacity:0.6" onclick="confirmDelete(${item.id})">
+                                <i data-lucide="trash" style="width:16px"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            const btnLoadMore = document.getElementById('btnLoadMore');
+            if (reversedDb.length > historyLimit) {
+                btnLoadMore.style.display = 'flex';
+            } else {
+                btnLoadMore.style.display = 'none';
+            }
+            lucide.createIcons();
+        }
+
+        function renderChart() {
+            const ctxTemp = document.getElementById('tempChart').getContext('2d');
+            const ctxHum = document.getElementById('humChart').getContext('2d');
+            if (tempChart) tempChart.destroy();
+            if (humChart) humChart.destroy();
+
+            const isLight = document.body.classList.contains('light-mode');
+            const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+            const tickColor = isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.4)';
+
+            const startDate = document.getElementById('filterStart').value;
+            const endDate = document.getElementById('filterEnd').value;
+            
+            let filteredData = db;
+            if (startDate && endDate) {
+                filteredData = db.filter(item => item.date >= startDate && item.date <= endDate);
+            } else if (startDate) {
+                filteredData = db.filter(item => item.date >= startDate);
+            } else if (endDate) {
+                filteredData = db.filter(item => item.date <= endDate);
+            }
+
+            const labels = filteredData.map(i => i.date.split('-').slice(2).join('/'));
+            const thresholds = JSON.parse(localStorage.getItem('thermoThresholds')) || {};
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                    x: { grid: { display: false }, ticks: { color: tickColor } }
+                }
+            };
+
+            tempChart = new Chart(ctxTemp, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Suhu', data: filteredData.map(i => i.temp), borderColor: '#007AFF', borderWidth: 3, tension: 0.4, pointRadius: 4, pointBackgroundColor: isLight ? '#007AFF' : '#fff' },
+                        { label: 'Max', data: Array(filteredData.length).fill(thresholds.maxT), borderColor: '#ff3b30', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0 },
+                        { label: 'Min', data: Array(filteredData.length).fill(thresholds.minT), borderColor: '#ff9500', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0 }
+                    ]
+                },
+                options: chartOptions
+            });
+
+            humChart = new Chart(ctxHum, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Lembap', data: filteredData.map(i => i.hum), borderColor: '#34C759', borderWidth: 3, tension: 0.4, pointRadius: 4, pointBackgroundColor: isLight ? '#34C759' : '#fff' },
+                        { label: 'Max', data: Array(filteredData.length).fill(thresholds.maxH), borderColor: '#ff3b30', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0 },
+                        { label: 'Min', data: Array(filteredData.length).fill(thresholds.minH), borderColor: '#ff9500', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0 }
+                    ]
+                },
+                options: chartOptions
+            });
+        }
+
+        function downloadFullCard(canvasId, title) {
+            const originalCanvas = document.getElementById(canvasId);
+            const isCurrentlyLight = document.body.classList.contains('light-mode');
+
+            // Jika sedang mode gelap, tanyakan mau tema apa
+            if (!isCurrentlyLight) {
+                showModal("Pilih Tema Gambar", "Ingin mengunduh gambar dengan tema Gelap atau Terang?", 'info');
+                
+                const actions = document.getElementById('modalActions');
+                actions.innerHTML = ''; 
+                
+                const btnDark = document.createElement('button');
+                btnDark.className = 'btn-main';
+                btnDark.innerText = 'Tema Gelap';
+                btnDark.onclick = () => {
+                    document.getElementById('modalOverlay').style.display = 'none';
+                    executeDownload(originalCanvas, title, true);
+                };
+
+                const btnLight = document.createElement('button');
+                btnLight.className = 'btn-main btn-outline';
+                btnLight.innerText = 'Tema Terang';
+                btnLight.onclick = async () => {
+                    document.getElementById('modalOverlay').style.display = 'none';
+                    // PROSES KHUSUS: Ubah ke terang sejenak agar teks grafik jadi hitam
+                    document.body.classList.add('light-mode');
+                    renderChart(); 
+                    
+                    // Tunggu sebentar agar Chart.js selesai merender ulang
+                    setTimeout(() => {
+                        executeDownload(originalCanvas, title, false);
+                        // Kembalikan ke mode gelap setelah download selesai
+                        document.body.classList.remove('light-mode');
+                        renderChart();
+                    }, 100);
+                };
+
+                actions.appendChild(btnLight);
+                actions.appendChild(btnDark);
+            } else {
+                executeDownload(originalCanvas, title, false);
+            }
+        }
+
+        function executeDownload(originalCanvas, title, useDarkMode) {
+            const padding = 30;
+            const titleHeight = 60;
+            const tempCanvas = document.createElement('canvas');
+            const tctx = tempCanvas.getContext('2d');
+            
+            // Set resolusi tinggi
+            tempCanvas.width = originalCanvas.width + (padding * 2);
+            tempCanvas.height = originalCanvas.height + titleHeight + (padding * 2);
+            
+            // 1. Gambar Background
+            tctx.fillStyle = useDarkMode ? '#1c1c1e' : '#ffffff'; 
+            tctx.beginPath();
+            tctx.roundRect(0, 0, tempCanvas.width, tempCanvas.height, 30);
+            tctx.fill();
+            
+            // 2. Gambar Border (Penting untuk mode terang agar terlihat di galeri)
+            tctx.strokeStyle = useDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            tctx.lineWidth = 2;
+            tctx.stroke();
+            
+            // 3. Teks Judul (Dipaksa Hitam/Putih agar terlihat)
+            tctx.fillStyle = useDarkMode ? '#ffffff' : '#000000'; 
+            tctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, sans-serif';
+            tctx.textBaseline = 'top';
+            tctx.fillText(title, padding, padding);
+            
+            // 4. Gambar Grafik dari Canvas Asli
+            tctx.drawImage(originalCanvas, padding, padding + titleHeight);
+            
+            // 5. Download
+            const link = document.createElement('a');
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.download = `${title.replace(/\s+/g, '_')}_${useDarkMode ? 'Dark' : 'Light'}_${dateStr}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadExcel(type) {
+            const startDate = document.getElementById('filterStart').value;
+            const endDate = document.getElementById('filterEnd').value;
+            const thresholds = JSON.parse(localStorage.getItem('thermoThresholds')) || {};
+            let exportData = db;
+            if (startDate && endDate) exportData = db.filter(item => item.date >= startDate && item.date <= endDate);
+            const data = exportData.map(i => ({ 
+                Tanggal: i.date, 
+                [type === 'temp' ? 'Suhu (°C)' : 'Kelembapan (%)']: type === 'temp' ? i.temp : i.hum,
+                "Ambang Min": type === 'temp' ? thresholds.minT : thresholds.minH,
+                "Ambang Max": type === 'temp' ? thresholds.maxT : thresholds.maxH
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+            XLSX.writeFile(wb, `Report_${type}.xlsx`);
+        }
+
+        function downloadExcelCombined() {
+            const startDate = document.getElementById('filterStart').value;
+            const endDate = document.getElementById('filterEnd').value;
+            const thresholds = JSON.parse(localStorage.getItem('thermoThresholds')) || {};
+            let exportData = db;
+            if (startDate && endDate) exportData = db.filter(item => item.date >= startDate && item.date <= endDate);
+            if (exportData.length === 0) return showModal("Info", "Tidak ada data untuk diekspor");
+            const data = exportData.map(i => ({ 
+                Tanggal: i.date, 
+                "Suhu (°C)": i.temp, "Suhu Min (Limit)": thresholds.minT, "Suhu Max (Limit)": thresholds.maxT,
+                "Kelembapan (%)": i.hum, "Hum Min (Limit)": thresholds.minH, "Hum Max (Limit)": thresholds.maxH
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Laporan_Lengkap");
+            XLSX.writeFile(wb, `Report_Full_${new Date().getTime()}.xlsx`);
+        }
+
+        function exportDatabase() {
+            if (db.length === 0) return showModal("Info", "Database kosong, tidak ada yang bisa diekspor.");
+            const dataStr = JSON.stringify(db, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = `ThermoHub_Backup_${new Date().toISOString().slice(0,10)}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        showModal("Konfirmasi", "Impor akan menggabungkan data baru dengan data yang sudah ada. Lanjutkan?", 'confirm', () => {
+                            const combined = [...db, ...importedData];
+                            db = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                            db.sort((a, b) => new Date(a.date) - new Date(b.date));
+                            saveDB();
+                            renderAll();
+                            showModal("Berhasil", "Data berhasil diimpor dan digabungkan.");
+                            event.target.value = '';
+                        });
+                    } else {
+                        showModal("Error", "Format file tidak valid.");
+                    }
+                } catch (err) {
+                    showModal("Error", "Gagal membaca file JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        loadThreshold();
+        renderAll();
+    </script>
+</body>
+</html>
