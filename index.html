@@ -9,9 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<meta name="apple-mobile-web-app-title" content="ThermoHub">
+    <meta name="apple-mobile-web-app-title" content="ThermoHub">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -28,7 +26,6 @@
             --gradient-bg: radial-gradient(circle at 50% -10%, #1c1c1e, #000000);
         }
 
-        /* --- LIGHT MODE OVERRIDES --- */
         body.light-mode {
             --primary: #000000;
             --bg-dark: #F2F2F7;
@@ -243,6 +240,112 @@
         
         .badge-warn { color: var(--danger); font-weight: 700; }
         .editable { cursor: pointer; }
+
+        /* --- OPTIMASI TABLET & PC (PERBAIKAN) --- */
+        @media (min-width: 768px) {
+            :root {
+                --safe-area: 40px;
+            }
+
+            body {
+                padding-bottom: 0;
+                padding-left: 280px; 
+                display: flex;
+                justify-content: center;
+            }
+
+            .container {
+                max-width: 1000px;
+                margin: 0;
+                width: 100%;
+                padding-top: 40px;
+            }
+
+            header {
+                padding: 40px var(--safe-area) 20px;
+                position: fixed;
+                top: 0;
+                left: 280px;
+                right: 0;
+                background: var(--bg-dark);
+                z-index: 800;
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border);
+            }
+
+            .bottom-nav-container {
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 280px;
+                padding: 24px;
+                background: var(--card-bg);
+                border-right: 1px solid var(--border);
+                pointer-events: auto;
+            }
+
+            .bottom-nav {
+                flex-direction: column;
+                height: auto;
+                gap: 12px;
+                background: transparent;
+                border: none;
+                backdrop-filter: none;
+                justify-content: flex-start;
+                padding-top: 100px;
+            }
+
+            .nav-item {
+                flex: none;
+                width: 100%;
+                flex-direction: row;
+                padding: 16px 20px;
+                border-radius: 16px;
+                gap: 15px;
+                transition: all 0.2s;
+            }
+
+            .nav-item.active {
+                background: rgba(0, 122, 255, 0.1);
+            }
+
+            .nav-item i {
+                margin-bottom: 0;
+                width: 22px;
+                height: 22px;
+            }
+
+            .nav-item span {
+                font-size: 14px;
+            }
+
+            /* Mencegah halaman tertumpuk */
+            .page-section {
+                display: none;
+                margin-top: 140px; 
+            }
+
+            .page-section.active {
+                display: block;
+            }
+
+            #chartPage.active {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+
+            #chartPage .card:first-child, 
+            #chartPage > button.btn-main { 
+                grid-column: span 2;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -256,12 +359,29 @@
         </div>
     </div>
 
-    <header>
-        <p id="headerDate"></p>
-        <h1 id="pageTitle">Aktivitas</h1>
-    </header>
+    <div class="bottom-nav-container">
+        <nav class="bottom-nav">
+            <a href="javascript:void(0)" class="nav-item active" data-page="inputPage" onclick="switchPage('inputPage', this, 'Aktivitas')">
+                <i data-lucide="plus-square"></i><span>Input</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" data-page="chartPage" onclick="switchPage('chartPage', this, 'Visualisasi')">
+                <i data-lucide="pie-chart"></i><span>Grafik</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" data-page="historyPage" onclick="switchPage('historyPage', this, 'Riwayat')">
+                <i data-lucide="clock"></i><span>Riwayat</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" data-page="settingsPage" onclick="switchPage('settingsPage', this, 'Pengaturan')">
+                <i data-lucide="settings"></i><span>Setelan</span>
+            </a>
+        </nav>
+    </div>
 
     <div class="container">
+        <header>
+            <p id="headerDate"></p>
+            <h1 id="pageTitle">Aktivitas</h1>
+        </header>
+
         <section id="inputPage" class="page-section active">
             <div class="card">
                 <span class="card-title"><i data-lucide="plus-circle"></i> TAMBAH DATA</span>
@@ -418,31 +538,12 @@
         </section>
     </div>
 
-    <div class="bottom-nav-container">
-        <nav class="bottom-nav">
-            <a href="javascript:void(0)" class="nav-item active" data-page="inputPage" onclick="switchPage('inputPage', this, 'Aktivitas')">
-                <i data-lucide="plus-square"></i><span>Input</span>
-            </a>
-            <a href="javascript:void(0)" class="nav-item" data-page="chartPage" onclick="switchPage('chartPage', this, 'Visualisasi')">
-                <i data-lucide="pie-chart"></i><span>Grafik</span>
-            </a>
-            <a href="javascript:void(0)" class="nav-item" data-page="historyPage" onclick="switchPage('historyPage', this, 'Riwayat')">
-                <i data-lucide="clock"></i><span>Riwayat</span>
-            </a>
-            <a href="javascript:void(0)" class="nav-item" data-page="settingsPage" onclick="switchPage('settingsPage', this, 'Pengaturan')">
-                <i data-lucide="settings"></i><span>Setelan</span>
-            </a>
-        </nav>
-    </div>
-    
-
     <script>
         lucide.createIcons();
         let db = JSON.parse(localStorage.getItem('thermoDataV5')) || [];
         let tempChart, humChart;
         let historyLimit = 30;
 
-        // --- LOGIKA TEMA ---
         function toggleTheme() {
             const isLight = document.body.classList.toggle('light-mode');
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
@@ -457,13 +558,11 @@
             lucide.createIcons();
         }
 
-        // Apply theme on load
         if (localStorage.getItem('theme') === 'light') {
             document.body.classList.add('light-mode');
             updateThemeUI();
         }
 
-        // --- LOGIKA SWIPE GESTURE ---
         let touchStartX = 0;
         let touchStartY = 0;
         let touchEndX = 0;
@@ -723,7 +822,6 @@
             const originalCanvas = document.getElementById(canvasId);
             const isCurrentlyLight = document.body.classList.contains('light-mode');
 
-            // Jika sedang mode gelap, tanyakan mau tema apa
             if (!isCurrentlyLight) {
                 showModal("Pilih Tema Gambar", "Ingin mengunduh gambar dengan tema Gelap atau Terang?", 'info');
                 
@@ -743,14 +841,11 @@
                 btnLight.innerText = 'Tema Terang';
                 btnLight.onclick = async () => {
                     document.getElementById('modalOverlay').style.display = 'none';
-                    // PROSES KHUSUS: Ubah ke terang sejenak agar teks grafik jadi hitam
                     document.body.classList.add('light-mode');
                     renderChart(); 
                     
-                    // Tunggu sebentar agar Chart.js selesai merender ulang
                     setTimeout(() => {
                         executeDownload(originalCanvas, title, false);
-                        // Kembalikan ke mode gelap setelah download selesai
                         document.body.classList.remove('light-mode');
                         renderChart();
                     }, 100);
@@ -769,31 +864,25 @@
             const tempCanvas = document.createElement('canvas');
             const tctx = tempCanvas.getContext('2d');
             
-            // Set resolusi tinggi
             tempCanvas.width = originalCanvas.width + (padding * 2);
             tempCanvas.height = originalCanvas.height + titleHeight + (padding * 2);
             
-            // 1. Gambar Background
             tctx.fillStyle = useDarkMode ? '#1c1c1e' : '#ffffff'; 
             tctx.beginPath();
             tctx.roundRect(0, 0, tempCanvas.width, tempCanvas.height, 30);
             tctx.fill();
             
-            // 2. Gambar Border (Penting untuk mode terang agar terlihat di galeri)
             tctx.strokeStyle = useDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
             tctx.lineWidth = 2;
             tctx.stroke();
             
-            // 3. Teks Judul (Dipaksa Hitam/Putih agar terlihat)
             tctx.fillStyle = useDarkMode ? '#ffffff' : '#000000'; 
             tctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, sans-serif';
             tctx.textBaseline = 'top';
             tctx.fillText(title, padding, padding);
             
-            // 4. Gambar Grafik dari Canvas Asli
             tctx.drawImage(originalCanvas, padding, padding + titleHeight);
             
-            // 5. Download
             const link = document.createElement('a');
             const dateStr = new Date().toISOString().split('T')[0];
             link.download = `${title.replace(/\s+/g, '_')}_${useDarkMode ? 'Dark' : 'Light'}_${dateStr}.png`;
